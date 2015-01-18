@@ -13,7 +13,7 @@ namespace OrchardVNext.FileSystems.VirtualPath {
         Stream OpenFile(string virtualPath);
         StreamWriter CreateText(string virtualPath);
         Stream CreateFile(string virtualPath);
-        DateTime GetFileLastWriteTimeUtc(string virtualPath);
+        DateTimeOffset GetFileLastWriteTime(string virtualPath);
         string GetFileHash(string virtualPath);
         string GetFileHash(string virtualPath, IEnumerable<string> dependencies);
         void DeleteFile(string virtualPath);

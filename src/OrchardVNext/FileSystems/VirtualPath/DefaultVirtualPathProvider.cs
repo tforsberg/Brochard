@@ -1,4 +1,6 @@
-﻿using OrchardVNext.Environment;
+﻿using Microsoft.AspNet.FileSystems;
+using Microsoft.Framework.Runtime;
+using OrchardVNext.Environment;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +8,7 @@ using System.IO;
 namespace OrchardVNext.FileSystems.VirtualPath {
     public class DefaultVirtualPathProvider : IVirtualPathProvider {
         private readonly IHostEnvironment _hostEnvironment;
+
         public DefaultVirtualPathProvider(
             IHostEnvironment hostEnvironment) {
             _hostEnvironment = hostEnvironment;
@@ -16,11 +19,21 @@ namespace OrchardVNext.FileSystems.VirtualPath {
         }
 
         public virtual IEnumerable<string> ListFiles(string path) {
-            return Directory.GetFiles(MapPath(path));
+            foreach (IFileInfo file in _hostEnvironment.FileSystem.GetDirectoryContents(MapPath(path))) {
+                if (file.IsDirectory)
+                    continue;
+
+                yield return file.Name;
+            }
         }
 
         public virtual IEnumerable<string> ListDirectories(string path) {
-            return Directory.GetDirectories(MapPath(path));
+            foreach (IFileInfo file in _hostEnvironment.FileSystem.GetDirectoryContents(MapPath(path))) {
+                if (!file.IsDirectory)
+                    continue;
+
+                yield return file.Name;
+            }
         }
 
         public virtual string Combine(params string[] paths) {
@@ -91,7 +104,7 @@ namespace OrchardVNext.FileSystems.VirtualPath {
         }
 
         public virtual Stream OpenFile(string virtualPath) {
-            return File.Open(MapPath(virtualPath), FileMode.Open);
+            return GetFileInfo(virtualPath).CreateReadStream();
         }
 
         public virtual StreamWriter CreateText(string virtualPath) {
@@ -102,8 +115,8 @@ namespace OrchardVNext.FileSystems.VirtualPath {
             return File.Create(MapPath(virtualPath));
         }
 
-        public virtual DateTime GetFileLastWriteTimeUtc(string virtualPath) {
-            return File.GetLastWriteTime(MapPath(virtualPath)).ToUniversalTime();
+        public virtual DateTimeOffset GetFileLastWriteTime(string virtualPath) {
+            return GetFileInfo(virtualPath).LastModified;
         }
 
         public string GetFileHash(string virtualPath) {
@@ -115,7 +128,7 @@ namespace OrchardVNext.FileSystems.VirtualPath {
         }
 
         public virtual void DeleteFile(string virtualPath) {
-            File.Delete(MapPath(virtualPath));
+            GetFileInfo(virtualPath).Delete();
         }
 
         public virtual string MapPath(string virtualPath) {
@@ -126,7 +139,7 @@ namespace OrchardVNext.FileSystems.VirtualPath {
         }
 
         public virtual bool FileExists(string virtualPath) {
-            return File.Exists(MapPath(virtualPath));
+            return GetFileInfo(virtualPath).Exists;
         }
 
         public virtual bool TryFileExists(string virtualPath) {
@@ -143,7 +156,7 @@ namespace OrchardVNext.FileSystems.VirtualPath {
         }
 
         public virtual bool DirectoryExists(string virtualPath) {
-            return Directory.Exists(MapPath(virtualPath));
+            return GetDirectoryInfo(virtualPath).Exists;
         }
 
         public virtual void CreateDirectory(string virtualPath) {
@@ -151,7 +164,25 @@ namespace OrchardVNext.FileSystems.VirtualPath {
         }
 
         public virtual void DeleteDirectory(string virtualPath) {
-            Directory.Delete(MapPath(virtualPath));
+            GetDirectoryInfo(virtualPath).Delete();
+        }
+
+        private IFileInfo GetFileInfo(string virtualPath) {
+            var fileInfo = _hostEnvironment.FileSystem.GetFileInfo(MapPath(virtualPath));
+
+            if (fileInfo.IsDirectory)
+                return null;
+
+            return fileInfo;
+        }
+
+        private IFileInfo GetDirectoryInfo(string virtualPath) {
+            var fileInfo = _hostEnvironment.FileSystem.GetDirectoryContents(MapPath(virtualPath));
+
+            if (!fileInfo.IsDirectory)
+                return null;
+
+            return fileInfo;
         }
     }
 }
