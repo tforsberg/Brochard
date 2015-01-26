@@ -26,7 +26,6 @@ namespace OrchardVNext {
     public interface ITransientDependency : IDependency {
     }
 
-
     public abstract class Component : IDependency {
         protected Component() {
             T = NullLocalizer.Instance;

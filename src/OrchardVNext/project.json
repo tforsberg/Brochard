@@ -18,7 +18,8 @@
 		},
 		"aspnetcore50": {
 			"dependencies": {
-				"System.Runtime": "4.0.20-beta-*",
+                "System.Runtime": "4.0.20-beta-*",
+                "System.Xml.XmlDocument": "4.0.0-beta-*",
 				"System.Xml.XDocument": "4.0.0-beta-*",
 				"System.IO.FileSystem.Primitives": "4.0.0-beta-*"
 			}

@@ -39,13 +39,14 @@ namespace OrchardVNext.Environment.ShellBuilders {
 
             var excludedTypes = GetExcludedTypes(features);
 
+            var modules = BuildBlueprint(features, IsModule, BuildModule, excludedTypes);
             var dependencies = BuildBlueprint(features, IsDependency, (t, f) => BuildDependency(t, f, descriptor), excludedTypes);
             var controllers = BuildBlueprint(features, IsController, BuildController, excludedTypes);
 
             var result = new ShellBlueprint {
                 Settings = settings,
                 Descriptor = descriptor,
-                Dependencies = dependencies.ToArray(),
+                Dependencies = dependencies.Concat(modules).ToArray(),
                 Controllers = controllers,
             };
 
@@ -99,8 +100,12 @@ namespace OrchardVNext.Environment.ShellBuilders {
                 .ToArray();
         }
 
-        private static bool IsController(Type type) {
-            return typeof(Controller).IsAssignableFrom(type);
+        private static bool IsModule(Type type) {
+            return typeof(IModule).IsAssignableFrom(type);
+        }
+
+        private static DependencyBlueprint BuildModule(Type type, Feature feature) {
+            return new DependencyBlueprint { Type = type, Feature = feature, Parameters = Enumerable.Empty<ShellParameter>() };
         }
 
         private static bool IsDependency(Type type) {
@@ -113,6 +118,10 @@ namespace OrchardVNext.Environment.ShellBuilders {
                 Feature = feature,
                 Parameters = descriptor.Parameters.Where(x => x.Component == type.FullName).ToArray()
             };
+        }
+
+        private static bool IsController(Type type) {
+            return typeof(Controller).IsAssignableFrom(type);
         }
 
         private static ControllerBlueprint BuildController(Type type, Feature feature) {

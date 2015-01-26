@@ -17,6 +17,7 @@ using OrchardVNext.FileSystems.VirtualPath;
 using OrchardVNext.FileSystems.WebSite;
 using OrchardVNext.Routing;
 using System.Reflection;
+using OrchardVNext.Environment.Descriptor;
 
 namespace OrchardVNext.Environment {
     public class OrchardStarter {
@@ -41,6 +42,8 @@ namespace OrchardVNext.Environment {
 
                     services.AddSingleton<IShellContextFactory, ShellContextFactory>();
                     {
+                        services.AddSingleton<IShellDescriptorCache, ShellDescriptorCache>();
+
                         services.AddSingleton<ICompositionStrategy, CompositionStrategy>();
                         {
                             services.AddSingleton<IOrchardLibraryManager, OrchardLibraryManager>();

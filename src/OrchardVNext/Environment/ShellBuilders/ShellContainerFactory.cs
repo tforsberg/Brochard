@@ -49,6 +49,17 @@ namespace OrchardVNext.Environment.ShellBuilders {
             //serviceCollection.AddTransient<INestedProvider<ActionDescriptorProviderContext>, ControllerActionDescriptorProviderTest>();
             serviceCollection.AddInstance<IAssemblyProvider>(new DefaultAssemblyProviderTest(p, _serviceProvider, _serviceProvider.GetService<IAssemblyLoaderContainer>()));
 
+
+            foreach (var dependency in blueprint.Dependencies
+                .Where(t => typeof(IModule).IsAssignableFrom(t.Type))) {
+
+                Logger.Debug("IModule Type: {0}", dependency.Type);
+
+                // TODO: Rewrite to get rid of reflection.
+                var instance = (IModule)Activator.CreateInstance(dependency.Type);
+                instance.Configure(serviceCollection);
+            }
+
             foreach (var dependency in blueprint.Dependencies) {
                 foreach (var interfaceType in dependency.Type.GetInterfaces()
                     .Where(itf => typeof(IDependency).IsAssignableFrom(itf))) {

@@ -3,6 +3,7 @@ using Microsoft.Framework.DependencyInjection;
 using System;
 using OrchardVNext.Environment.Descriptor.Models;
 using System.Linq;
+using OrchardVNext.Environment.Descriptor;
 
 namespace OrchardVNext.Environment.ShellBuilders {
     /// <summary>
@@ -14,24 +15,40 @@ namespace OrchardVNext.Environment.ShellBuilders {
         /// Builds a shell context given a specific tenant settings structure
         /// </summary>
         ShellContext CreateShellContext(ShellSettings settings);
+
+        /// <summary>
+        /// Builds a shell context for an uninitialized Orchard instance. Needed
+        /// to display setup user interface.
+        /// </summary>
+        ShellContext CreateSetupContext(ShellSettings settings);
     }
 
     public class ShellContextFactory : IShellContextFactory {
+        private readonly IShellDescriptorCache _shellDescriptorCache;
         private readonly ICompositionStrategy _compositionStrategy;
         private readonly IShellContainerFactory _shellContainerFactory;
 
         public ShellContextFactory(
+            IShellDescriptorCache shellDescriptorCache,
             ICompositionStrategy compositionStrategy,
             IShellContainerFactory shellContainerFactory) {
+            _shellDescriptorCache = shellDescriptorCache;
             _compositionStrategy = compositionStrategy;
             _shellContainerFactory = shellContainerFactory;
         }
 
         ShellContext IShellContextFactory.CreateShellContext(
             ShellSettings settings) {
-            Console.WriteLine("Creating shell context for tenant {0}", settings.Name);
 
-            var blueprint = _compositionStrategy.Compose(settings, MinimumShellDescriptor());
+            Logger.Debug("Creating shell context for tenant {0}", settings.Name);
+
+            var knownDescriptor = _shellDescriptorCache.Fetch(settings.Name);
+            if (knownDescriptor == null) {
+                Logger.Information("No descriptor cached. Starting with minimum components.");
+                knownDescriptor = MinimumShellDescriptor();
+            }
+
+            var blueprint = _compositionStrategy.Compose(settings, knownDescriptor);
             var provider = _shellContainerFactory.CreateContainer(settings, blueprint);
 
             try {
@@ -52,11 +69,30 @@ namespace OrchardVNext.Environment.ShellBuilders {
             return new ShellDescriptor {
                 SerialNumber = -1,
                 Features = new[] {
-                    new ShellFeature {Name = "OrchardVNext.Framework"},
-                    new ShellFeature {Name = "OrchardVNext.Test1"},
-                    new ShellFeature {Name = "OrchardVNext.Demo" }
+                    new ShellFeature {Name = "OrchardVNext.Framework"}
                 },
                 Parameters = Enumerable.Empty<ShellParameter>(),
+            };
+        }
+
+        ShellContext IShellContextFactory.CreateSetupContext(ShellSettings settings) {
+            Logger.Debug("No shell settings available. Creating shell context for setup");
+
+            var descriptor = new ShellDescriptor {
+                SerialNumber = -1,
+                Features = new[] {
+                    new ShellFeature { Name = "OrchardVNext.Setup" },
+                },
+            };
+
+            var blueprint = _compositionStrategy.Compose(settings, descriptor);
+            var provider = _shellContainerFactory.CreateContainer(settings, blueprint);
+
+            return new ShellContext {
+                Settings = settings,
+                Blueprint = blueprint,
+                LifetimeScope = provider,
+                Shell = provider.GetService<IOrchardShell>()
             };
         }
     }

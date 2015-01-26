@@ -26,19 +26,32 @@ namespace OrchardVNext.Environment {
             var currentRequestServices = httpContext.RequestServices;
 
             var shellSettings = _shellSettingsManager.LoadSettings();
-            var shellSetting = shellSettings
-                .SingleOrDefault(x => x.RequestUrlPrefix == httpContext.Request.Host.Value);
+            if (shellSettings.Any()) {
+                var shellSetting = shellSettings
+                    .SingleOrDefault(x => x.RequestUrlPrefix == httpContext.Request.Host.Value);
 
-            if (shellSetting != null) {
-                using (var shell = _shellContextFactory.CreateShellContext(shellSetting)) {
+                if (shellSetting != null) {
+                    using (var shell = _shellContextFactory.CreateShellContext(shellSetting)) {
+                        httpContext.RequestServices = shell.LifetimeScope;
+
+                        shell.Shell.Activate();
+                        await _next.Invoke(httpContext);
+                    }
+                }
+                else {
+                    // TODO: Throw a 404.
+                    await _next.Invoke(httpContext);
+                }
+            }
+            else {
+                using (var shell = _shellContextFactory.CreateSetupContext(
+                    new ShellSettings { Name = ShellSettings.DefaultName }
+                    )) {
                     httpContext.RequestServices = shell.LifetimeScope;
 
                     shell.Shell.Activate();
                     await _next.Invoke(httpContext);
                 }
-            }
-            else {
-                await _next.Invoke(httpContext);
             }
         }
     }
