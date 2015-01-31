@@ -39,7 +39,6 @@ namespace OrchardVNext.Environment.ShellBuilders {
             serviceCollection.AddInstance(blueprint);
 
             serviceCollection.AddMvc();
-            serviceCollection.AddScoped<IRazorPageFactory, VirtualPathRazorPageFactoryTest>();
             serviceCollection.AddSingleton<ICompilationService, DefaultRoslynCompilationService>();
 
             serviceCollection.Configure<RazorViewEngineOptions>(options => {
