@@ -16,9 +16,14 @@ namespace OrchardVNext.Mvc.Routes {
         }
 
         public async Task RouteAsync(RouteContext context) {
-            if (context.HttpContext.Request.Host.Value == _urlHost) {
+            if (context.HttpContext.Request.Host.Value == _urlHost || string.IsNullOrEmpty(_urlHost)) {
                 context.HttpContext.Items["orchard.Handler"] = new Func<Task>(async () => {
-                    await _target.RouteAsync(context);
+                    try {
+                        await _target.RouteAsync(context);
+                    }
+                    catch (Exception exception) {
+                        Logger.Error(exception, exception.Source);
+                    }
                 });
 
                 await _pipeline.Invoke(context.HttpContext);

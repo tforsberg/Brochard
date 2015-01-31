@@ -15,6 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using OrchardVNext.Mvc.Razor;
 
 namespace OrchardVNext.Environment.ShellBuilders {
     public interface IShellContainerFactory {
@@ -38,6 +39,8 @@ namespace OrchardVNext.Environment.ShellBuilders {
             serviceCollection.AddInstance(blueprint);
 
             serviceCollection.AddMvc();
+            serviceCollection.AddScoped<IRazorPageFactory, VirtualPathRazorPageFactoryTest>();
+            serviceCollection.AddSingleton<ICompilationService, DefaultRoslynCompilationService>();
 
             serviceCollection.Configure<RazorViewEngineOptions>(options => {
                 var expander = new ModuleViewLocationExpander();
