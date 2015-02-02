@@ -8,7 +8,17 @@ using OrchardVNext.FileSystems.AppData;
 
 namespace OrchardVNext.Environment.Configuration {
     public interface IShellSettingsManager {
+        /// <summary>
+        /// Retrieves all shell settings stored.
+        /// </summary>
+        /// <returns>All shell settings.</returns>
         IEnumerable<ShellSettings> LoadSettings();
+
+        /// <summary>
+        /// Persists shell settings to the storage.
+        /// </summary>
+        /// <param name="settings">The shell settings to store.</param>
+        void SaveSettings(ShellSettings settings);
     }
 
     public class ShellSettingsManager : IShellSettingsManager {
@@ -72,6 +82,21 @@ namespace OrchardVNext.Environment.Configuration {
             }
 
             return shellSettings;
+        }
+
+        public void SaveSettings(ShellSettings settings) {
+            if (settings == null)
+                throw new ArgumentNullException("settings");
+            if (String.IsNullOrEmpty(settings.Name))
+                throw new ArgumentException("The Name property of the supplied ShellSettings object is null or empty; the settings cannot be saved.", "settings");
+
+            Logger.Information("Saving ShellSettings for tenant '{0}'...", settings.Name);
+            var filePath = Path.Combine(Path.Combine("Sites", settings.Name), string.Format(_settingsFileNameFormat, "txc"));
+            var source = new DefaultFileConfigurationSource(_appDataFolder, filePath);
+
+            source.Set("Name", settings.Name);
+
+            source.Commit();
         }
     }
 }

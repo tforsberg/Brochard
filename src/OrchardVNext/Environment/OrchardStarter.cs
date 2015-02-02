@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.AspNet.Builder;
-using Microsoft.AspNet.Hosting;
 using Microsoft.Framework.DependencyInjection;
 using Microsoft.Framework.DependencyInjection.ServiceLookup;
 using Microsoft.Framework.Logging;
 using Microsoft.Framework.Runtime;
 using OrchardVNext.Environment.Configuration;
+using OrchardVNext.Environment.Descriptor;
 using OrchardVNext.Environment.Extensions;
 using OrchardVNext.Environment.Extensions.Folders;
 using OrchardVNext.Environment.Extensions.Loaders;
@@ -16,8 +17,6 @@ using OrchardVNext.FileSystems.AppData;
 using OrchardVNext.FileSystems.VirtualPath;
 using OrchardVNext.FileSystems.WebSite;
 using OrchardVNext.Routing;
-using System.Reflection;
-using OrchardVNext.Environment.Descriptor;
 
 namespace OrchardVNext.Environment {
     public class OrchardStarter {
@@ -25,6 +24,8 @@ namespace OrchardVNext.Environment {
             app.UseServices(services => {
                 services.AddSingleton<IHostEnvironment, DefaultHostEnvironment>();
                 services.AddSingleton<IAppDataFolderRoot, AppDataFolderRoot>();
+
+                services.AddScoped<IWorkContextAccessor, WorkContextAccessor>();
 
                 services.AddSingleton<IWebSiteFolder, WebSiteFolder>();
                 services.AddSingleton<IAppDataFolder, AppDataFolder>();

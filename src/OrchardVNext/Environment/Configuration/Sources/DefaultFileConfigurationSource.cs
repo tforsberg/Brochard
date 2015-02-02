@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using OrchardVNext.FileSystems.AppData;
 
 namespace OrchardVNext.Environment.Configuration.Sources
@@ -31,7 +32,7 @@ namespace OrchardVNext.Environment.Configuration.Sources
         }
 
         public void Commit() {
-            throw new NotImplementedException();
+            _appDataFolder.CreateFile(Path, ComposeSettings(Data));
         }
 
         internal void Load(Stream stream) {
@@ -67,6 +68,15 @@ namespace OrchardVNext.Environment.Configuration.Sources
             }
 
             ReplaceData(data);
+        }
+
+        public static string ComposeSettings(IDictionary<string, string> data) {
+            var sb = new StringBuilder();
+            foreach (var dataLine in data) {
+                sb.AppendLine(dataLine.Key + ": " + (dataLine.Value ?? EmptyValue));
+            }
+
+            return sb.ToString();
         }
     }
 }

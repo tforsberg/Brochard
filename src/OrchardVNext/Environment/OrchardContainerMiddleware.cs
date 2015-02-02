@@ -9,16 +9,16 @@ namespace OrchardVNext.Environment {
     public class OrchardContainerMiddleware {
         private readonly RequestDelegate _next;
         private readonly IShellSettingsManager _shellSettingsManager;
-        private readonly IShellContextFactory _shellContextFactory;
+        private readonly IOrchardHost _orchardHost;
 
 
         public OrchardContainerMiddleware(
             RequestDelegate next,
             IShellSettingsManager shellSettingsManager,
-            IShellContextFactory shellContextFactory) {
+            IOrchardHost orchardHost) {
             _next = next;
             _shellSettingsManager = shellSettingsManager;
-            _shellContextFactory = shellContextFactory;
+            _orchardHost = orchardHost;
         }
 
         public async Task Invoke(HttpContext httpContext) {
@@ -31,7 +31,7 @@ namespace OrchardVNext.Environment {
                     .SingleOrDefault(x => x.RequestUrlPrefix == httpContext.Request.Host.Value);
 
                 if (shellSetting != null) {
-                    using (var shell = _shellContextFactory.CreateShellContext(shellSetting)) {
+                    using (var shell = _orchardHost.CreateShellContext(shellSetting)) {
                         httpContext.RequestServices = shell.LifetimeScope;
 
                         shell.Shell.Activate();
@@ -44,9 +44,8 @@ namespace OrchardVNext.Environment {
                 }
             }
             else {
-                using (var shell = _shellContextFactory.CreateSetupContext(
-                    new ShellSettings { Name = ShellSettings.DefaultName }
-                    )) {
+                using (var shell = _orchardHost.CreateShellContext(
+                    new ShellSettings { Name = ShellSettings.DefaultName, State = TenantState.Uninitialized })) {
                     httpContext.RequestServices = shell.LifetimeScope;
 
                     shell.Shell.Activate();
