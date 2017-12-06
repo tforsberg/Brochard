@@ -47,6 +47,7 @@ app.publish/
 *.pidb
 *.log
 *.scc
+project.lock.json
 
 # Visual C++ cache files
 ipch/
@@ -110,8 +111,8 @@ csx
 AppPackages/
 
 # Others
-sql/
 *.Cache
+!OrchardCore.Environment.Cache
 ClientBin/
 [Ss]tyle[Cc]op.*
 ~$*
@@ -164,25 +165,25 @@ build/
 /buildazure
 /buildtasks
 /artifacts
+site/
 *.sln.cache
-src/Orchard.Web/Media/*
+src/OrchardCore.Modules/**/launchSettings.json
+src/OrchardCore.Themes/**/launchSettings.json
 log.xml
 profiling/
 *.orig
-src/Orchard.Web/Modules-temp/*
-src/Backup/*
-src/packages/*
-src/UpgradeLog.*
-*.itrace.csdef
-*.build.csdef
-src/Orchard.Azure/Orchard.Azure.Web/Core/
-src/Orchard.Azure/Orchard.Azure.Web/Modules/
-src/Orchard.Azure/Orchard.Azure.Web/Themes/
-src/Orchard.Azure/Orchard.Azure.CloudService/csx/Debug/*
-src/Orchard.Web/Orchard.Web.Publish.xml
-src/TestResults/*
-src/Orchard.Web/Properties/PublishProfiles
-src/Orchard.Azure/Orchard.Azure.CloudService/Staging/
+.vs/
+#.vscode/
+.build/
+.testPublish/
+
+nuget.exe
+.nuget/
 
 #enable all /lib artifacts
 !lib/*/*.*
+
+#exclude node modules
+node_modules/*
+
+wwwroot
